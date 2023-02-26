@@ -29,6 +29,7 @@ public class ProfessorController : ControllerBase {
                 Professor p = new Professor();
                 p.nomina = Convert.ToString(dt.Rows[i]["Nomina"]);
                 p.nombre = Convert.ToString(dt.Rows[i]["Nombre_Profesor"]);
+                p.rol = Convert.ToString(dt.Rows[i]["Rol"]);
                 professorList.Add(p);
             }
         }
