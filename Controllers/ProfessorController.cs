@@ -19,7 +19,7 @@ public class ProfessorController : ControllerBase {
     [HttpGet(Name = "GetProfessors")]
     public string GetProfessors() {
         SqlConnection con = new SqlConnection(_configuration.GetConnectionString("ProfessorAppCon").ToString());
-        SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Profesor", con);
+        SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Empleados", con);
         DataTable dt = new DataTable();
         da.Fill(dt);
         List<Professor> professorList = new List<Professor>();
@@ -27,9 +27,9 @@ public class ProfessorController : ControllerBase {
         if (dt.Rows.Count > 0) {
             for (int i=0; i<dt.Rows.Count; i++) {
                 Professor p = new Professor();
-                p.nomina = Convert.ToString(dt.Rows[i]["Nomina"]);
-                p.nombre = Convert.ToString(dt.Rows[i]["Nombre_Profesor"]);
-                p.rol = Convert.ToString(dt.Rows[i]["Rol"]);
+                p.nomina = Convert.ToString(dt.Rows[i]["Nómina"]);
+                p.nombre = Convert.ToString(dt.Rows[i]["Nombre_Empleado"]);
+                p.rol = Convert.ToString(dt.Rows[i]["idRol"]);
                 professorList.Add(p);
             }
         }
