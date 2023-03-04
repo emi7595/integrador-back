@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\UDEM\\6to Semestre\\Proyecto Integrador\\Código\\integrador-back\\integrador-back.csproj": {}
+    "C:\\Users\\emili\\Documents\\GitHub\\integrador-back\\integrador-back.csproj": {}
   },
   "projects": {
-    "D:\\UDEM\\6to Semestre\\Proyecto Integrador\\Código\\integrador-back\\integrador-back.csproj": {
+    "C:\\Users\\emili\\Documents\\GitHub\\integrador-back\\integrador-back.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\UDEM\\6to Semestre\\Proyecto Integrador\\Código\\integrador-back\\integrador-back.csproj",
+        "projectUniqueName": "C:\\Users\\emili\\Documents\\GitHub\\integrador-back\\integrador-back.csproj",
         "projectName": "integrador-back",
-        "projectPath": "D:\\UDEM\\6to Semestre\\Proyecto Integrador\\Código\\integrador-back\\integrador-back.csproj",
-        "packagesPath": "C:\\Users\\karen\\.nuget\\packages\\",
-        "outputPath": "D:\\UDEM\\6to Semestre\\Proyecto Integrador\\Código\\integrador-back\\obj\\",
+        "projectPath": "C:\\Users\\emili\\Documents\\GitHub\\integrador-back\\integrador-back.csproj",
+        "packagesPath": "C:\\Users\\emili\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\emili\\Documents\\GitHub\\integrador-back\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\karen\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\emili\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
