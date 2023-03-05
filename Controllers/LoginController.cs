@@ -53,8 +53,6 @@ public class LoginController : ControllerBase {
     // }
 
 
-
-
     [HttpPost(Name = "Login")]
     public IActionResult Login(Login login)
     {
@@ -64,10 +62,13 @@ public class LoginController : ControllerBase {
             if (IsValidUser(login.user, login.pin))
             {
                 // Generate and return authentication token if login successful
-                // string token = GenerateToken(login.user);
-                // Console.WriteLine(Ok(new { token }));
                 string token = "HOLA";
-                return Ok(new { token });
+                // Search for user info to store in sessionStorage
+                SqlConnection con = new SqlConnection(_configuration.GetConnectionString("UDEMAppCon").ToString());
+                SqlDataAdapter da = new SqlDataAdapter("SELECT Nómina, Nombre_Empleado, idRol FROM Empleados JOIN Usuarios ON Nómina=Nómina_Empleado WHERE Usuario ='" + login.user + "' AND Pin = '" + login.pin + "'", con);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                return Ok(new { token, nomina = dt.Rows[0]["Nómina"], nombre = dt.Rows[0]["Nombre_Empleado"], idRol = dt.Rows[0]["idRol"] });
             }
             else
             {
