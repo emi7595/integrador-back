@@ -220,7 +220,7 @@ public class QRController : ControllerBase {
         // Get the class that the professor is currently on
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
-        SELECT idHorario, Hora_Inicio, Hora_Final FROM Cursos JOIN Horarios ON Cursos.CRN=Horarios.CRN
+        SELECT Materia, idHorario, Hora_Inicio, Hora_Final FROM Cursos JOIN Horarios ON Cursos.CRN=Horarios.CRN JOIN Materias ON CVE_Materia=CVE
         WHERE Nómina_Empleado=" + nomina + @" AND " + day + @" IS NOT NULL 
         AND ('" + time + "'>=DATEADD(minute, -10, Hora_Inicio) AND '" + time + "'<=Hora_Final)", con);
         DataTable dt = new DataTable();
@@ -230,6 +230,7 @@ public class QRController : ControllerBase {
         if (dt.Rows.Count > 0) {
             Course c = new Course();
             c.currentClass = (int)dt.Rows[0]["idHorario"];
+            c.subjectName = (string)dt.Rows[0]["Materia"];
             c.startHour = (TimeSpan)dt.Rows[0]["Hora_Inicio"];
             c.endHour = (TimeSpan)dt.Rows[0]["Hora_Final"];
             return JsonConvert.SerializeObject(c);
