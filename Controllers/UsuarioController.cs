@@ -18,7 +18,7 @@ public class UsuarioController : ControllerBase {
 
     [HttpGet(Name = "GetUsuarios")]
     public string GetUsuarios() {
-        SqlConnection con = new SqlConnection(_configuration.GetConnectionString("UDEMAppCon").ToString());
+        SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Usuarios", con);
         DataTable dt = new DataTable();
         da.Fill(dt);

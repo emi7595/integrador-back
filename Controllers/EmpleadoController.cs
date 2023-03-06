@@ -18,7 +18,7 @@ public class EmpleadoController : ControllerBase {
 
     [HttpGet(Name = "GetEmpleados")]
     public string GetEmpleados() {
-        SqlConnection con = new SqlConnection(_configuration.GetConnectionString("UDEMAppCon").ToString());
+        SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Empleados", con);
         DataTable dt = new DataTable();
         da.Fill(dt);
@@ -42,21 +42,4 @@ public class EmpleadoController : ControllerBase {
             return JsonConvert.SerializeObject(r);
         }
     }
-
-    // [HttpPost(Name = "Login")]
-    // public string Login(Login login) {
-    //     SqlConnection con = new SqlConnection(_configuration.GetConnectionString("EmpleadoAppCon").ToString());
-    //     SqlDataAdapter da = new SqlDataAdapter("SELECT Rol FROM Profesor JOIN Usuario ON Nomina_Profesor=Nomina WHERE Usuario='" + login.user + "' AND Pin=" + login.pin, con);
-    //     DataTable dt = new DataTable();
-    //     da.Fill(dt);
-    //     Response r = new Response();
-    //     if (dt.Rows.Count > 0) {
-    //         return Convert.ToString(dt.Rows[0]["Rol"]);
-    //     }
-    //     else {
-    //         r.statusCode = 100;
-    //         r.errorMessage = "Inicio de sesión incorrecto";
-    //         return JsonConvert.SerializeObject(r);
-    //     }
-    //}
 }
