@@ -9,33 +9,36 @@ namespace integrador_back.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class LoginController : ControllerBase {
+public class LoginController : ControllerBase
+{
     public readonly IConfiguration _configuration;
 
-    public LoginController(IConfiguration configuration) {
+    public LoginController(IConfiguration configuration)
+    {
         _configuration = configuration;
     }
 
+    // --- FUNCTION THAT CHECKS IF A USER AND PASSWORD IS VALID (EXISTS IN DATABASE) ---
     private bool IsValidUser(string username, string password)
     {
         string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
         string query = "SELECT COUNT(*) FROM Usuarios WHERE Usuario = @Username AND Pin = @Password";
-        
+
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             SqlCommand command = new SqlCommand(query, connection);
             command.Parameters.AddWithValue("@Username", username);
             command.Parameters.AddWithValue("@Password", password);
-            
+
             connection.Open();
             int count = (int)command.ExecuteScalar();
             connection.Close();
-            
+
             return count > 0;
         }
-    } 
+    }
 
-
+    // --- API ROUTE: CHECK USER CREDENTIALS AND PERFORM LOGIN ---
     [HttpPost(Name = "Login")]
     public IActionResult Login(Login login)
     {
@@ -59,7 +62,7 @@ public class LoginController : ControllerBase {
                 return BadRequest(new { error = "Invalid username or password" });
             }
         }
-        
+
         // Return error message if model state is invalid
         return BadRequest(ModelState);
     }

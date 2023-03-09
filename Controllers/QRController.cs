@@ -8,18 +8,22 @@ namespace integrador_back.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class QRController : ControllerBase {
+public class QRController : ControllerBase
+{
     public readonly IConfiguration _configuration;
 
-    public QRController(IConfiguration configuration) {
+    public QRController(IConfiguration configuration)
+    {
         _configuration = configuration;
     }
 
     // --- FUNCTION THAT RETURNS THE CORRESPONDING ATTENDANCE CODE, BASED ON THE CURRENT TIME AND THE CLASS HOUR ---
-    private int GetAttendanceCode(int currentClass, TimeSpan classHour, TimeSpan currentTime, DateTime date, bool start) {
+    private int GetAttendanceCode(int currentClass, TimeSpan classHour, TimeSpan currentTime, DateTime date, bool start)
+    {
         TimeSpan tenMinutes = TimeSpan.FromMinutes(10);
         // START OF CLASS
-        if (start) {
+        if (start)
+        {
             // Class is on time
             if (classHour >= currentTime.Subtract(tenMinutes) && classHour <= currentTime.Add(tenMinutes))
                 return 0;
@@ -28,7 +32,8 @@ public class QRController : ControllerBase {
                 return 1;
         }
         // END OF CLASS
-        else {
+        else
+        {
             // Get current code of class
             SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
             SqlDataAdapter da = new SqlDataAdapter("SELECT idCódigo FROM Asistencia WHERE idHorario=" + currentClass + "AND Fecha='" + date.ToString("yyyyMMdd") + "'", con);
@@ -37,11 +42,13 @@ public class QRController : ControllerBase {
 
             int currentCode = -1;
             // Current code (registered at the beginning of the class)
-            if (dt.Rows.Count > 0) {
+            if (dt.Rows.Count > 0)
+            {
                 currentCode = (int)dt.Rows[0]["idCódigo"];
             }
             // Class ended soon
-            if (currentTime < classHour.Subtract(tenMinutes)) {
+            if (currentTime < classHour.Subtract(tenMinutes))
+            {
                 // Class was not late (beginning)
                 if (currentCode == 0)
                     return 2;
@@ -57,7 +64,8 @@ public class QRController : ControllerBase {
 
 
     // --- FUNCTION THAT RETURNS THE DESCRIPTION ASSOCIATED WITH AN ATTENDANCE CODE ---
-    private string GetCodeMessage(int code) {
+    private string GetCodeMessage(int code)
+    {
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter("SELECT Descripción FROM Códigos WHERE idCódigo=" + code, con);
         DataTable dt = new DataTable();
@@ -67,7 +75,8 @@ public class QRController : ControllerBase {
 
 
     // --- FUNCTION THAT REGISTERS AN ATTENDANCE IN THE DATABASE AND RETURNS THE ATTENDANCE CODE ---
-    private int SearchAttendance(int nomina, TimeSpan time, DateTime date, string day, bool start) {
+    private int SearchAttendance(int nomina, TimeSpan time, DateTime date, string day, bool start)
+    {
         // Get the class that the professor is currently on
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
@@ -78,7 +87,8 @@ public class QRController : ControllerBase {
         da.Fill(dt);
 
         // The professor is currently on that class
-        if (dt.Rows.Count > 0) {
+        if (dt.Rows.Count > 0)
+        {
             // Get data of current class
             int currentClass = (int)dt.Rows[0]["idHorario"];
             TimeSpan startHour = (TimeSpan)dt.Rows[0]["Hora_Inicio"];
@@ -93,7 +103,8 @@ public class QRController : ControllerBase {
             da.Fill(dt);
 
             // There is no attendance for that day
-            if ((int)dt.Rows[0]["Conteo"] == 0) {
+            if ((int)dt.Rows[0]["Conteo"] == 0)
+            {
                 int code;
                 // Beginning of the class
                 if (start)
@@ -103,35 +114,39 @@ public class QRController : ControllerBase {
                     return -2;
                 // Register attendance in database
                 con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlCommand cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + currentClass + ", '" + date.ToString("yyyyMMdd") +"', " + code + ")", con);
+                SqlCommand cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + currentClass + ", '" + date.ToString("yyyyMMdd") + "', " + code + ")", con);
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
                 return code;
             }
             // End of the class - Update attendance code
-            else if(!start) {
+            else if (!start)
+            {
                 int code = GetAttendanceCode(currentClass, endHour, time, date, false);
                 con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlCommand cmd = new SqlCommand("UPDATE Asistencia SET idCódigo=" + code + " WHERE idHorario=" + currentClass, con);                
+                SqlCommand cmd = new SqlCommand("UPDATE Asistencia SET idCódigo=" + code + " WHERE idHorario=" + currentClass, con);
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
                 return code;
             }
             // The initial attendance has already been taken
-            else {
+            else
+            {
                 return -1;
             }
         }
         // The professor isn't currently in a class
-        else {
+        else
+        {
             return -3;
         }
     }
 
     // --- FUNCTION THAT REGISTERS THE ATTENDANCE FOR THE CURRENT DAY ---
-    private int RegisterAttendance(Attendance attendance, bool start) {
+    private int RegisterAttendance(Attendance attendance, bool start)
+    {
         DateTime now = DateTime.Now; // Get current date
         int dayOfWeek = (int)now.DayOfWeek; // Get current day of week
         TimeSpan time = now.TimeOfDay; // Get current time
@@ -139,7 +154,8 @@ public class QRController : ControllerBase {
 
         int code;
 
-        switch(dayOfWeek) {
+        switch (dayOfWeek)
+        {
             case 0: // Sunday
                 code = SearchAttendance(attendance?.nomina ?? 0, time, date, "S1", start); break;
             case 1: // Monday
@@ -165,8 +181,11 @@ public class QRController : ControllerBase {
     // --- API ROUTE: REGISTER ENTRANCE ATTENDANCE ---
     [HttpPost]
     [Route("RegisterEntrance")]
-    public IActionResult RegisterEntrance(Attendance attendance) {
+    public IActionResult RegisterEntrance(Attendance attendance)
+    {
+        // Register entrance in database
         int code = RegisterAttendance(attendance, true);
+        // Return corresponding attendance code
         return Ok(new { code, message = (code == -1 ? "La asistencia inicial ya se ha registrado. Si desea registrar la salida, genere un código de salida." : code == -3 ? "No hay clases en este momento." : GetCodeMessage(code)) });
     }
 
@@ -174,8 +193,11 @@ public class QRController : ControllerBase {
     // --- API ROUTE: REGISTER DEPARTURE ATTENDANCE ---
     [HttpPost]
     [Route("RegisterDeparture")]
-    public IActionResult RegisterDeparture(Attendance attendance) {
+    public IActionResult RegisterDeparture(Attendance attendance)
+    {
+        // Register entrance in database
         int code = RegisterAttendance(attendance, false);
+        // Return corresponding attendance code
         return Ok(new { code, message = (code == -2 ? "No se ha registrado la asistencia inicial." : code == -3 ? "No hay clases en este momento." : GetCodeMessage(code)) });
     }
 
@@ -183,14 +205,16 @@ public class QRController : ControllerBase {
     // --- API ROUTE: GET INFORMATION OF CURRENT COURSE ---
     [HttpGet]
     [Route("GetCourseData/{nomina}")]
-    public string GetCourseData(int nomina) {
+    public string GetCourseData(int nomina)
+    {
         DateTime now = DateTime.Now; // Get current date
         int dayOfWeek = (int)now.DayOfWeek; // Get current day of week
         TimeSpan time = now.TimeOfDay; // Get current time
         DateTime date = now.Date; // Get current day (date)
 
         string day = "";
-        switch(dayOfWeek) {
+        switch (dayOfWeek)
+        {
             case 0: // Sunday
                 day = "S1"; break;
             case 1: // Monday
@@ -217,7 +241,8 @@ public class QRController : ControllerBase {
         da.Fill(dt);
 
         // The professor is on class
-        if (dt.Rows.Count > 0) {
+        if (dt.Rows.Count > 0)
+        {
             Course c = new Course();
             c.currentClass = (int)dt.Rows[0]["idHorario"];
             c.subjectName = (string)dt.Rows[0]["Materia"];
@@ -226,7 +251,8 @@ public class QRController : ControllerBase {
             return JsonConvert.SerializeObject(c);
         }
         // The professor doesn't have class at the present time
-        else {
+        else
+        {
             return "-1";
         }
     }
