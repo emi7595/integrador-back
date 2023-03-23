@@ -51,10 +51,10 @@ public class LoginController : ControllerBase
                 string token = "HOLA";
                 // Search for user info to store in sessionStorage
                 SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlDataAdapter da = new SqlDataAdapter("SELECT Nómina, Nombre_Empleado, idRol FROM Empleados JOIN Usuarios ON Nómina=Nómina_Empleado WHERE Usuario ='" + login?.user + "' AND Pin = '" + login?.pin + "'", con);
+                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Empleados JOIN Usuarios ON Nómina=Nómina_Empleado WHERE Usuario ='" + login?.user + "' AND Pin = '" + login?.pin + "'", con);
                 DataTable dt = new DataTable();
                 da.Fill(dt);
-                return Ok(new { token, nomina = dt.Rows[0]["Nómina"], nombre = dt.Rows[0]["Nombre_Empleado"], idRol = dt.Rows[0]["idRol"] });
+                return Ok(new { token, nomina = dt.Rows[0]["Nómina"], nombre = dt.Rows[0]["Nombre_Empleado"], idRol = dt.Rows[0]["idRol"], idDepartamento = dt.Rows[0]["idDepartamento"] });
             }
             else
             {

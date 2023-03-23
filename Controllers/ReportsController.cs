@@ -354,4 +354,19 @@ public class ReportsController : ControllerBase
             return "No hay escuelas";
         }
     }
+
+
+    // --- API ROUTE: Descripción ---
+    [HttpGet]
+    [Route("GetSchoolId/{idDepartamento}")]
+    public int GetSchoolId(int idDepartamento)
+    {
+        // Get all schools
+        SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
+        SqlDataAdapter da = new SqlDataAdapter("SELECT idEscuela FROM Departamentos WHERE idDepartamento=" + idDepartamento, con);
+        DataTable dt = new DataTable();
+        da.Fill(dt);
+
+        return Convert.ToInt16(dt.Rows[0]["idEscuela"]);
+    }
 }
