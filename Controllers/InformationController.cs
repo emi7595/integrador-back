@@ -17,12 +17,12 @@ public class InformationController : ControllerBase
         _configuration = configuration;
     }
 
-    // --- API ROUTE: Description ---
+    // --- API ROUTE: GET ALL CLASSES THAT A PROFESSOR IS TEACHING ---
     [HttpGet]
     [Route("Professor/GetClasses/{nomina}")]
     public string GetClasses(int nomina)
     {
-        // Get all classes
+        // Get all classes associated to the professor
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
         SELECT Cursos.CRN, CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', Materia, Cursos.Salón, Hora_Inicio, Hora_Final, S1, M, T, W, R, F, S
@@ -34,11 +34,13 @@ public class InformationController : ControllerBase
         DataTable dt = new DataTable();
         da.Fill(dt);
         
+        // Create list of all classes
         List<ProfessorClasses> classes = new List<ProfessorClasses>();
         if (dt.Rows.Count > 0)
         {
             for (int i = 0; i < dt.Rows.Count; i++)
             {
+                // Add info of a class to classes list
                 ProfessorClasses p = new ProfessorClasses();
                 p.CRN = Convert.ToString(dt.Rows[i]["CRN"]);
                 p.CVE_Materia = Convert.ToString(dt.Rows[i]["CVE_Materia"]);

@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using System.Data.SqlClient;
 using System.Data;
 using Newtonsoft.Json;
@@ -18,11 +17,12 @@ public class ReportsController : ControllerBase
         _configuration = configuration;
     }
 
-    // --- API ROUTE: Descripción ---
+    // --- API ROUTE: GET ATTENDANCE CODES FOR EACH DAY OF A CERTAIN SCHEDULE ---
     [HttpGet]
     [Route("Professor/GetScheduleDetail/{idHorario}")]
     public string GetScheduleDetail(int idHorario)
     {
+        // Get days of a certain schedule
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
         SELECT idHorario, S1, M, T, W, R, F, S FROM Horarios WHERE idHorario=" + idHorario, con);
@@ -45,12 +45,13 @@ public class ReportsController : ControllerBase
 
             // Get attendance code for each day
             DateTime semesterBegin = new DateTime(2023, 1, 16);
-            DateTime curDate = DateTime.Now; // fecha actual
+            DateTime curDate = DateTime.Now;
 
             while (semesterBegin <= curDate)
             {
                 if (days.Contains(semesterBegin.DayOfWeek))
                 {
+                    // Get code of day
                     con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
                     da = new SqlDataAdapter(@"
                     SELECT Asistencia.idCódigo, Descripción FROM Asistencia JOIN Códigos ON Asistencia.idCódigo=Códigos.idCódigo
@@ -58,6 +59,7 @@ public class ReportsController : ControllerBase
                     dt = new DataTable();
                     da.Fill(dt);
 
+                    // Add code
                     if (dt.Rows.Count > 0)
                     {
                         ScheduleDetail sD = new ScheduleDetail();
@@ -66,7 +68,8 @@ public class ReportsController : ControllerBase
                         sD.date = semesterBegin.Date;
                         scheduleDetails.Add(sD);
                     }
-                    else // Falta
+                    // If there is no code, then it means the professor has no attendance for that day (code 4)
+                    else
                     {
                         ScheduleDetail sD = new ScheduleDetail();
                         sD.codeId = 4;
@@ -88,12 +91,12 @@ public class ReportsController : ControllerBase
     }
 
 
-    // --- API ROUTE: Descripción ---
+    // --- API ROUTE: GET ATTENDANCE AVERAGE OF A CERTAIN PROFESSOR ---
     [HttpGet]
     [Route("Professor/GetAttendanceAverage/{nomina}")]
     public string GetAttendanceAverage(int nomina)
     {
-        // Get all classes
+        // Get all classes of the professor
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
         SELECT Nómina, Nombre_Empleado, Materia, Cursos.CRN, CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', idHorario, S1, M, T, W, R, F, S
@@ -134,7 +137,7 @@ public class ReportsController : ControllerBase
 
                 // Get attendance code for each day
                 DateTime semesterBegin = new DateTime(2023, 1, 16);
-                DateTime curDate = DateTime.Now; // fecha actual
+                DateTime curDate = DateTime.Now;
 
                 while (semesterBegin <= curDate)
                 {
@@ -147,6 +150,7 @@ public class ReportsController : ControllerBase
                         DataTable dt2 = new DataTable();
                         da2.Fill(dt2);
 
+                        // Add numbers of sessions and number of movements (different than 0)
                         if (dt2.Rows.Count > 0)
                         {
                             if (Convert.ToInt16(dt2.Rows[0]["idCódigo"]) >= 1 && Convert.ToInt16(dt2.Rows[0]["idCódigo"]) <= 3)
@@ -162,7 +166,8 @@ public class ReportsController : ControllerBase
                             // Add info for graphic
                             codes[Convert.ToInt16(dt2.Rows[0]["idCódigo"])]++;
                         }
-                        else // Falta
+                        // If there is no code, then it means the professor has no attendance for that day (code 4)
+                        else
                         {
                             numberMovements++;
                             numberSessions++;
@@ -188,12 +193,12 @@ public class ReportsController : ControllerBase
     }
 
 
-    // --- API ROUTE: Descripción ---
+    // --- API ROUTE: GET ATTENDANCE AVERAGE OF A CERTAIN DEPARTMENT ---
     [HttpGet]
     [Route("Director/GetDepartmentAverage/{idDepartamento}")]
     public string GetDepartmentAverage(int idDepartamento)
     {
-        // Get professors in department
+        // Get all professors in department
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
         SELECT Nómina, Nombre_Departamento FROM Empleados JOIN Departamentos ON Empleados.idDepartamento=Departamentos.idDepartamento
@@ -207,6 +212,7 @@ public class ReportsController : ControllerBase
             List<DepartmentAvg> departmentAvgs = new List<DepartmentAvg>();
             for (int i = 0; i < dt.Rows.Count; i++)
             {
+                // Get attendance average of all classes of the professor
                 List<ProfessorAttendanceAvg>? professorAvg = JsonConvert.DeserializeObject<List<ProfessorAttendanceAvg>>(GetAttendanceAverage(Convert.ToInt16(dt.Rows[i]["Nómina"])));
                 if (professorAvg != null)
                 {
@@ -238,7 +244,7 @@ public class ReportsController : ControllerBase
     }
 
 
-    // --- API ROUTE: Descripción ---
+    // --- API ROUTE: GET ATTENDANCE AVERAGE OF A CERTAIN SCHOOL ---
     [HttpGet]
     [Route("Vicerrector/GetSchoolAverage/{idEscuela}")]
     public string GetSchoolAverage(int idEscuela)
@@ -261,6 +267,7 @@ public class ReportsController : ControllerBase
                 string res = GetDepartmentAverage(Convert.ToInt16(dt.Rows[i]["idDepartamento"]));
                 if (res != "No hay profesores en el departamento")
                 {
+                    // Get attendance average of all professors in a department
                     List<DepartmentAvg>? departmentAvg = JsonConvert.DeserializeObject<List<DepartmentAvg>>(res);
                     if (departmentAvg != null)
                     {
@@ -281,7 +288,8 @@ public class ReportsController : ControllerBase
                         schoolAvgs.Add(s);
                     }
                 }
-                else // There are no professors in the department
+                // There are no professors in the department
+                else
                 {
                     SchoolAvg s = new SchoolAvg();
                     s.schoolName = Convert.ToString(dt.Rows[0]["Nombre_Escuela"]);
@@ -304,7 +312,7 @@ public class ReportsController : ControllerBase
     }
 
 
-    // --- API ROUTE: Descripción ---
+    // --- API ROUTE: GET ATTENDANCE AVERAGE OF THE WHOLE UNIVERSITY ---
     [HttpGet]
     [Route("Rector/GetUDEMAverage")]
     public string GetUDEMAverage()
@@ -321,6 +329,7 @@ public class ReportsController : ControllerBase
             List<UDEMAvg> UDEMAvg = new List<UDEMAvg>();
             for (int i = 0; i < dt.Rows.Count; i++)
             {
+                // Get attendance average of all departments in school 
                 List<SchoolAvg>? schoolAvg = JsonConvert.DeserializeObject<List<SchoolAvg>>(GetSchoolAverage(Convert.ToInt16(dt.Rows[i]["idEscuela"])));
                 if (schoolAvg != null)
                 {
@@ -356,12 +365,12 @@ public class ReportsController : ControllerBase
     }
 
 
-    // --- API ROUTE: Descripción ---
+    // --- API ROUTE: GET SCHOOL ID FROM DEPARTMENT ID ---
     [HttpGet]
     [Route("GetSchoolId/{idDepartamento}")]
     public int GetSchoolId(int idDepartamento)
     {
-        // Get all schools
+        // Get school id
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter("SELECT idEscuela FROM Departamentos WHERE idDepartamento=" + idDepartamento, con);
         DataTable dt = new DataTable();
