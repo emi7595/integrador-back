@@ -43,9 +43,9 @@ public class InformationController : ControllerBase
                 // Add info of a class to classes list
                 ProfessorClasses p = new ProfessorClasses();
                 p.CRN = Convert.ToString(dt.Rows[i]["CRN"]);
-                p.CVE_Materia = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
-                p.materia = Convert.ToString(dt.Rows[i]["Materia"]);
-                p.salón = Convert.ToString(dt.Rows[i]["Salón"]);
+                p.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
+                p.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
+                p.classroom = Convert.ToString(dt.Rows[i]["Salón"]);
                 p.startTime = (TimeSpan)dt.Rows[i]["Hora_Inicio"];
                 p.endTime = (TimeSpan)dt.Rows[i]["Hora_Final"];
                 p.S1 = Convert.ToString(dt.Rows[i]["S1"]);

@@ -3,9 +3,9 @@ namespace integrador_back.Models;
 public class ProfessorClasses
 {
     public string? CRN { get; set; }
-    public string? CVE_Materia { get; set; }
-    public string? materia { get; set; }
-    public string? salón { get; set; }
+    public string? subject_CVE { get; set; }
+    public string? subjectName { get; set; }
+    public string? classroom { get; set; }
     public TimeSpan? startTime { get; set; }
     public TimeSpan? endTime { get; set; }
     public string? S1 { get; set; }

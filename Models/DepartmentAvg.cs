@@ -2,7 +2,7 @@ namespace integrador_back.Models;
 
 public class DepartmentAvg
 {
-    public string? nombreEmpleado { get; set; }
+    public string? employeeName { get; set; }
     public string? nomina { get; set; }
     public string? departmentName { get; set; }
     public double? average { get; set; }

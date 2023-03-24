@@ -116,11 +116,11 @@ public class ReportsController : ControllerBase
             {
                 ProfessorAttendanceAvg p = new ProfessorAttendanceAvg();
                 p.nomina = Convert.ToString(dt.Rows[i]["Nómina"]);
-                p.nombreEmpleado = Convert.ToString(dt.Rows[i]["Nombre_Empleado"]);
-                p.materia = Convert.ToString(dt.Rows[i]["Materia"]);
+                p.employeeName = Convert.ToString(dt.Rows[i]["Nombre_Empleado"]);
+                p.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
                 p.CRN = Convert.ToString(dt.Rows[i]["CRN"]);
-                p.CVE_Materia = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
-                p.idHorario = Convert.ToString(dt.Rows[i]["idHorario"]);
+                p.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
+                p.scheduleId = Convert.ToString(dt.Rows[i]["idHorario"]);
                 int numberSessions = 0;
                 int numberMovements = 0;
                 int[] codes = new int[11];
@@ -145,7 +145,7 @@ public class ReportsController : ControllerBase
                     {
                         con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
                         SqlDataAdapter da2 = new SqlDataAdapter(@"
-                        SELECT idCódigo FROM Asistencia WHERE idHorario=" + p.idHorario + @"
+                        SELECT idCódigo FROM Asistencia WHERE idHorario=" + p.scheduleId + @"
                         AND Fecha='" + semesterBegin.ToString("yyyy-MM-dd") + "'", con);
                         DataTable dt2 = new DataTable();
                         da2.Fill(dt2);
@@ -218,7 +218,7 @@ public class ReportsController : ControllerBase
                 {
                     DepartmentAvg d = new DepartmentAvg();
                     d.nomina = professorAvg[0].nomina;
-                    d.nombreEmpleado = professorAvg[0].nombreEmpleado;
+                    d.employeeName = professorAvg[0].employeeName;
                     d.departmentName = Convert.ToString(dt.Rows[0]["Nombre_Departamento"]);
                     double avgAux = 0;
                     int[] codes = new int[11];
