@@ -54,7 +54,7 @@ public class LoginController : ControllerBase
                 SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Empleados JOIN Usuarios ON Nómina=Nómina_Empleado WHERE Usuario ='" + login?.user + "' AND Pin = '" + login?.pin + "'", con);
                 DataTable dt = new DataTable();
                 da.Fill(dt);
-                return Ok(new { token, nomina = dt.Rows[0]["Nómina"], nombre = dt.Rows[0]["Nombre_Empleado"], idRol = dt.Rows[0]["idRol"], idDepartamento = dt.Rows[0]["idDepartamento"] });
+                return Ok(new { token, nomina = dt.Rows[0]["Nómina"], nombre = dt.Rows[0]["Nombre_Empleado"], idRol = dt.Rows[0]["idRol"], idDepartamento = dt.Rows[0]["idDepartamento"], idEscuela = dt.Rows[0]["idEscuela"] });
             }
             else
             {

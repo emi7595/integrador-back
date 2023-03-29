@@ -234,7 +234,7 @@ public class QRController : ControllerBase
         // Get the information of the class that the professor is currently on
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
-        SELECT Materia, idHorario, Hora_Inicio, Hora_Final FROM Cursos JOIN Horarios ON Cursos.CRN=Horarios.CRN JOIN Materias ON CVE_Materia=CVE
+        SELECT Materia, idHorario, Hora_Inicio, Hora_Final FROM Cursos JOIN Horarios ON Cursos.CRN=Horarios.CRN JOIN Materias ON Cursos.CVE_Materia=CVE
         WHERE Nómina_Empleado=" + nomina + @" AND " + day + @" IS NOT NULL 
         AND ('" + time + "'>=DATEADD(minute, -10, Hora_Inicio) AND '" + time + "'<=Hora_Final)", con);
         DataTable dt = new DataTable();

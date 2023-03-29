@@ -273,7 +273,7 @@ public class ReportsController : ControllerBase
                     {
                         SchoolAvg s = new SchoolAvg();
                         s.schoolName = Convert.ToString(dt.Rows[0]["Nombre_Escuela"]);
-                        s.departmentId = Convert.ToInt16(dt.Rows[0]["idDepartamento"]);
+                        s.departmentId = Convert.ToInt16(dt.Rows[i]["idDepartamento"]);
                         s.departmentName = departmentAvg[0].departmentName;
                         double avgAux = 0;
                         int[] codes = new int[11];
@@ -293,7 +293,7 @@ public class ReportsController : ControllerBase
                 {
                     SchoolAvg s = new SchoolAvg();
                     s.schoolName = Convert.ToString(dt.Rows[0]["Nombre_Escuela"]);
-                    s.departmentId = Convert.ToInt16(dt.Rows[0]["idDepartamento"]);
+                    s.departmentId = Convert.ToInt16(dt.Rows[i]["idDepartamento"]);
                     s.departmentName = Convert.ToString(dt.Rows[i]["Nombre_Departamento"]);
                     s.average = -1;
                     if (s.codes != null)
