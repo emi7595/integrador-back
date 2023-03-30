@@ -125,7 +125,7 @@ public class QRController : ControllerBase
             {
                 int code = GetAttendanceCode(currentClass, endHour, time, date, false);
                 con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlCommand cmd = new SqlCommand("UPDATE Asistencia SET idCódigo=" + code + " WHERE idHorario=" + currentClass, con);
+                SqlCommand cmd = new SqlCommand("UPDATE Asistencia SET idCódigo=" + code + " WHERE idHorario=" + currentClass + "AND Fecha='" + date.ToString("yyyyMMdd") + "'", con);
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
