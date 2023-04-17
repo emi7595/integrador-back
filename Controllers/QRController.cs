@@ -80,7 +80,13 @@ public class QRController : ControllerBase
         // Get the class that the professor is currently on
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
-        SELECT idHorario, Hora_Inicio, Hora_Final FROM Cursos JOIN Horarios ON Cursos.CRN=Horarios.CRN
+        SELECT idHorario, Hora_Inicio, Hora_Final FROM Cursos JOIN Horarios ON (
+                Cursos.CRN=Horarios.CRN 
+                AND Cursos.Subject=Horarios.Subject 
+                AND Cursos.CVE_Materia=Horarios.CVE_Materia 
+                AND Cursos.Grupo=Horarios.Grupo 
+                AND Cursos.Salón=Horarios.Salón
+            ) 
         WHERE Nómina_Empleado=" + nomina + @" AND " + day + @" IS NOT NULL 
         AND ('" + time + "'>=DATEADD(minute, -10, Hora_Inicio) AND '" + time + "'<=Hora_Final)", con);
         DataTable dt = new DataTable();
@@ -234,7 +240,15 @@ public class QRController : ControllerBase
         // Get the information of the class that the professor is currently on
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
-        SELECT Materia, idHorario, Hora_Inicio, Hora_Final FROM Cursos JOIN Horarios ON Cursos.CRN=Horarios.CRN JOIN Materias ON Cursos.CVE_Materia=CVE
+        SELECT Cursos.CRN, CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', Materia, idHorario, Hora_Inicio, Hora_Final  
+        FROM Cursos JOIN Horarios ON (
+                Cursos.CRN=Horarios.CRN 
+                AND Cursos.Subject=Horarios.Subject 
+                AND Cursos.CVE_Materia=Horarios.CVE_Materia 
+                AND Cursos.Grupo=Horarios.Grupo 
+                AND Cursos.Salón=Horarios.Salón
+            ) 
+            JOIN Materias ON (Cursos.CVE_Materia=CVE AND Cursos.Subject=Materias.Subject)
         WHERE Nómina_Empleado=" + nomina + @" AND " + day + @" IS NOT NULL 
         AND ('" + time + "'>=DATEADD(minute, -10, Hora_Inicio) AND '" + time + "'<=Hora_Final)", con);
         DataTable dt = new DataTable();
@@ -245,6 +259,8 @@ public class QRController : ControllerBase
         {
             Course c = new Course();
             c.currentClass = (int)dt.Rows[0]["idHorario"];
+            c.CRN = dt.Rows[0]["CRN"].ToString();
+            c.subject_CVE = (string)dt.Rows[0]["CVE_Materia"];
             c.subjectName = (string)dt.Rows[0]["Materia"];
             c.startHour = (TimeSpan)dt.Rows[0]["Hora_Inicio"];
             c.endHour = (TimeSpan)dt.Rows[0]["Hora_Final"];
