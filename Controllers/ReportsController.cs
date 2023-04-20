@@ -192,7 +192,6 @@ public class ReportsController : ControllerBase
                     }
                     semesterBegin = semesterBegin.AddDays(1);
                 }
-                Console.WriteLine(numberMovements + " " + numberSessions);
                 p.average = Math.Round(100 - (numberMovements * 1.0 / numberSessions * 100), 1);
                 p.codes = codes;
 
