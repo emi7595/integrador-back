@@ -67,4 +67,125 @@ public class InformationController : ControllerBase
             return "El profesor no tiene ninguna clase";
         }
     }
+
+
+    // --- API ROUTE: GET ALL CLASSES IN UDEM ---
+    [HttpGet]
+    [Route("Admin/GetClasses")]
+    public string GetClasses()
+    {
+        // Get all classes in UDEM
+        SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
+        SqlDataAdapter da = new SqlDataAdapter(@"
+        SELECT	Nómina, 
+                Nombre_Empleado,
+                Materia,
+                Cursos.CRN, 
+                CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', 
+                CONCAT(CONVERT(char(5), Hora_Inicio, 108), ' - ', CONVERT(char(5), Hora_Final, 108)) AS 'Horario', 
+                CONCAT(S1, M, T, W, R, F, S) AS 'Días',
+                Cursos.Salón
+        FROM Empleados 
+                JOIN Cursos ON Nómina=Nómina_Empleado
+                JOIN Horarios ON (
+                    Cursos.CRN=Horarios.CRN
+                    AND Cursos.Subject=Horarios.Subject
+                    AND Cursos.CVE_Materia=Horarios.CVE_Materia
+                    AND Cursos.Grupo=Horarios.Grupo
+                    AND Cursos.Salón=Horarios.Salón)
+                JOIN Materias ON (Cursos.CVE_Materia=CVE AND Cursos.Subject=Materias.Subject)", con);
+        DataTable dt = new DataTable();
+        da.Fill(dt);
+        
+        // Create list of all Classes
+        List<Class> classes = new List<Class>();
+        if (dt.Rows.Count > 0)
+        {
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                // Add info of a class to classes list
+                Class c = new Class();
+                c.nomina = Convert.ToString(dt.Rows[i]["Nómina"]);
+                c.employeeName = Convert.ToString(dt.Rows[i]["Nombre_Empleado"]);
+                c.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
+                c.CRN = Convert.ToString(dt.Rows[i]["CRN"]);
+                c.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
+                c.schedule = Convert.ToString(dt.Rows[i]["Horario"]);
+                c.days = Convert.ToString(dt.Rows[i]["Días"]);
+                c.classroom = Convert.ToString(dt.Rows[i]["Salón"]);
+
+                classes.Add(c);
+            }
+
+            return JsonConvert.SerializeObject(classes);
+        }
+        // The are no classes
+        else
+        {
+            return "No hay ninguna clase";
+        }
+    }
+
+
+    // --- API ROUTE: SEARCH A SPECIFIC CLASS ---
+    [HttpGet]
+    [Route("Admin/SearchClass/{term}")]
+    public string SearchClass(string term)
+    {
+        // Get all classes in UDEM
+        SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
+        SqlDataAdapter da = new SqlDataAdapter(@"
+        SELECT	Nómina, 
+                Nombre_Empleado,
+                Materia,
+                Cursos.CRN, 
+                CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', 
+                CONCAT(CONVERT(char(5), Hora_Inicio, 108), ' - ', CONVERT(char(5), Hora_Final, 108)) AS 'Horario', 
+                CONCAT(S1, M, T, W, R, F, S) AS 'Días',
+                Cursos.Salón
+        FROM Empleados 
+                JOIN Cursos ON Nómina=Nómina_Empleado
+                JOIN Horarios ON (
+                    Cursos.CRN=Horarios.CRN
+                    AND Cursos.Subject=Horarios.Subject
+                    AND Cursos.CVE_Materia=Horarios.CVE_Materia
+                    AND Cursos.Grupo=Horarios.Grupo
+                    AND Cursos.Salón=Horarios.Salón)
+                JOIN Materias ON (Cursos.CVE_Materia=CVE AND Cursos.Subject=Materias.Subject)
+        WHERE Nombre_Empleado LIKE '%" + term + 
+        "%' OR Cursos.CRN LIKE '%" + term + 
+        "%' OR Materia LIKE '%" + term + 
+        "%' OR Nómina LIKE '%" + term + 
+        "%' OR Cursos.Salón LIKE '%" + term + "%'", con);
+        DataTable dt = new DataTable();
+        da.Fill(dt);
+
+        // Create list of all Classes
+        List<Class> classes = new List<Class>();
+        if (dt.Rows.Count > 0)
+        {
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                // Add info of a class to classes list
+                Class c = new Class();
+                c.nomina = Convert.ToString(dt.Rows[i]["Nómina"]);
+                c.employeeName = Convert.ToString(dt.Rows[i]["Nombre_Empleado"]);
+                c.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
+                c.CRN = Convert.ToString(dt.Rows[i]["CRN"]);
+                c.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
+                c.schedule = Convert.ToString(dt.Rows[i]["Horario"]);
+                c.days = Convert.ToString(dt.Rows[i]["Días"]);
+                c.classroom = Convert.ToString(dt.Rows[i]["Salón"]);
+
+                classes.Add(c);
+            }
+
+            return JsonConvert.SerializeObject(classes);
+        }
+        // The are no classes
+        else
+        {
+            return "No hay ninguna clase";
+        }
+    }
 }

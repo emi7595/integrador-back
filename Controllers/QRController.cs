@@ -150,6 +150,7 @@ public class QRController : ControllerBase
         }
     }
 
+
     // --- FUNCTION THAT REGISTERS THE ATTENDANCE FOR THE CURRENT DAY ---
     private int RegisterAttendance(Attendance attendance, bool start)
     {
