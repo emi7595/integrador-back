@@ -44,12 +44,18 @@ public class ReportsController : ControllerBase
             if (Convert.ToString(dt.Rows[0]["S"]) != "") { days.Add(DayOfWeek.Saturday); }
 
             // Get attendance code for each day
-            DateTime semesterBegin = new DateTime(2023, 1, 16);
+            DateTime semesterBegin = new DateTime(2023, 1, 11);
             DateTime curDate = DateTime.Now;
 
             while (semesterBegin <= curDate)
             {
-                if (days.Contains(semesterBegin.DayOfWeek))
+                // Check if there is an attendance code for that day (in case there was a reposition or something)
+                SqlConnection con2 = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
+                SqlDataAdapter da2 = new SqlDataAdapter("SELECT COUNT(*) AS Conteo FROM Asistencia WHERE idHorario=" + idHorario + " AND Fecha='" + semesterBegin.ToString("yyyyMMdd") + "'", con2);
+                DataTable dt2 = new DataTable();
+                da2.Fill(dt2);
+
+                if (days.Contains(semesterBegin.DayOfWeek) || (int)dt2.Rows[0]["Conteo"] != 0)
                 {
                     // Get code of day
                     con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
@@ -136,12 +142,18 @@ public class ReportsController : ControllerBase
                 if (Convert.ToString(dt.Rows[i]["S"]) != "") { days.Add(DayOfWeek.Saturday); }
 
                 // Get attendance code for each day
-                DateTime semesterBegin = new DateTime(2023, 1, 16);
+                DateTime semesterBegin = new DateTime(2023, 1, 11);
                 DateTime curDate = DateTime.Now;
 
                 while (semesterBegin <= curDate)
                 {
-                    if (days.Contains(semesterBegin.DayOfWeek))
+                    // Check if there is an attendance code for that day (in case there was a reposition or something)
+                    SqlConnection con3 = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
+                    SqlDataAdapter da3 = new SqlDataAdapter("SELECT COUNT(*) AS Conteo FROM Asistencia WHERE idHorario=" + p.scheduleId + " AND Fecha='" + semesterBegin.ToString("yyyyMMdd") + "'", con3);
+                    DataTable dt3 = new DataTable();
+                    da3.Fill(dt3);
+
+                    if (days.Contains(semesterBegin.DayOfWeek) || (int)dt3.Rows[0]["Conteo"] != 0)
                     {
                         con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
                         SqlDataAdapter da2 = new SqlDataAdapter(@"
@@ -158,7 +170,11 @@ public class ReportsController : ControllerBase
                                 numberMovements++;
                                 numberSessions++;
                             }
-                            else if (Convert.ToInt16(dt2.Rows[0]["idCódigo"]) == 0)
+                            else if (Convert.ToInt16(dt2.Rows[0]["idCódigo"]) >= 7)
+                            {
+                                numberMovements--;
+                            }
+                            else
                             {
                                 numberSessions++;
                             }
@@ -176,7 +192,7 @@ public class ReportsController : ControllerBase
                     }
                     semesterBegin = semesterBegin.AddDays(1);
                 }
-
+                Console.WriteLine(numberMovements + " " + numberSessions);
                 p.average = Math.Round(100 - (numberMovements * 1.0 / numberSessions * 100), 1);
                 p.codes = codes;
 
