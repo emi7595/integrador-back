@@ -16,7 +16,6 @@ var configuration = proveedor.GetRequiredService<IConfiguration>();
 builder.Services.AddCors(opciones =>
 {
     var frontendURL = configuration.GetValue<string>("frontend_url");
-    Console.WriteLine(frontendURL);
     opciones.AddDefaultPolicy(builder =>
     {
         builder.WithOrigins(frontendURL).AllowAnyMethod().AllowAnyHeader();
