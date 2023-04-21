@@ -1,6 +1,6 @@
 namespace integrador_back.Models;
 
-public class AbscenceModel
+public class RepositionModel
 {
     public DateTime? date { get; set; }
     public string? startTime { get; set; }

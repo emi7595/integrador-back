@@ -1,6 +1,6 @@
 namespace integrador_back.Models;
 
-public class AbscenceClassroom
+public class RepositionClassroom
 {
     public int? idReposition { get; set; }
     public string? classroom { get; set; }

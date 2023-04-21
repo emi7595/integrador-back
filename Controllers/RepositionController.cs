@@ -8,11 +8,11 @@ namespace integrador_back.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class AbscenceController : ControllerBase
+public class RepositionsController : ControllerBase
 {
     public readonly IConfiguration _configuration;
 
-    public AbscenceController(IConfiguration configuration)
+    public RepositionsController(IConfiguration configuration)
     {
         _configuration = configuration;
     }
@@ -21,7 +21,7 @@ public class AbscenceController : ControllerBase
     // --- FUNCTION THAT GETS ALL REPOSITION REPORTS (PENDING OR ACCEPTED) ---
     private string GetRepositionReports(bool pending)
     {
-        // Get all abscence reports from the professor
+        // Get all reposition reports (pending/accepted)
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
         SELECT  idReposición, 
@@ -46,41 +46,41 @@ public class AbscenceController : ControllerBase
         DataTable dt = new DataTable();
         da.Fill(dt);
 
-        // Create list of all abscence reports
-        List<AbscenceTable> abscences = new List<AbscenceTable>();
+        // Create list of all reposition reports
+        List<RepositionTable> repositions = new List<RepositionTable>();
         if (dt.Rows.Count > 0)
         {
             for (int i = 0; i < dt.Rows.Count; i++)
             {
-                // Add info of an abscence to abscences list
-                AbscenceTable a = new AbscenceTable();
-                a.idReposition = Convert.ToInt32(dt.Rows[i]["idReposición"]);
-                a.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
-                a.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
-                a.date = Convert.ToDateTime(dt.Rows[i]["FechaReposicion"]);
-                a.startTime = Convert.ToString(dt.Rows[i]["Hora_Inicio"]);
-                a.classroom = pending ? null : Convert.ToString(dt.Rows[i]["Salón"]);
-                a.eventNum = pending ? null : Convert.ToInt32(dt.Rows[i]["Número_Evento"]);
-                a.idSchedule = Convert.ToInt32(dt.Rows[i]["idHorario"]);
-                a.idCode = Convert.ToInt32(dt.Rows[i]["idCódigo"]);
+                // Add info of a reposition to repositions list
+                RepositionTable r = new RepositionTable();
+                r.idReposition = Convert.ToInt32(dt.Rows[i]["idReposición"]);
+                r.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
+                r.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
+                r.date = Convert.ToDateTime(dt.Rows[i]["FechaReposicion"]);
+                r.startTime = Convert.ToString(dt.Rows[i]["Hora_Inicio"]);
+                r.classroom = pending ? null : Convert.ToString(dt.Rows[i]["Salón"]);
+                r.eventNum = pending ? null : Convert.ToInt32(dt.Rows[i]["Número_Evento"]);
+                r.idSchedule = Convert.ToInt32(dt.Rows[i]["idHorario"]);
+                r.idCode = Convert.ToInt32(dt.Rows[i]["idCódigo"]);
 
-                abscences.Add(a);
+                repositions.Add(r);
             }
 
-            return JsonConvert.SerializeObject(abscences);
+            return JsonConvert.SerializeObject(repositions);
         }
-        // The are no abscence reports submitted by the professor
+        // The are no reposition reports submitted by the professor
         else
             return "";
     }
 
 
-    // --- API ROUTE: GET ALL ABSCENCE REPORTS FROM A PROFESSOR ---
+    // --- API ROUTE: GET ALL REPOSITION REPORTS FROM A PROFESSOR ---
     [HttpGet]
-    [Route("Professor/AbscenceReports/{nomina}")]
-    public string GetPendingAbsence(int nomina)
+    [Route("Professor/RepositionReports/{nomina}")]
+    public string GetRepositionReports(int nomina)
     {
-        // Get all abscence reports from the professor
+        // Get all reposition reports from the professor
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
         SELECT  idReposición, 
@@ -105,30 +105,30 @@ public class AbscenceController : ControllerBase
         DataTable dt = new DataTable();
         da.Fill(dt);
 
-        // Create list of all abscence reports
-        List<AbscenceTable> abscences = new List<AbscenceTable>();
+        // Create list of all reposition reports
+        List<RepositionTable> repositions = new List<RepositionTable>();
         if (dt.Rows.Count > 0)
         {
             for (int i = 0; i < dt.Rows.Count; i++)
             {
-                // Add info of an abscence to abscences list
-                AbscenceTable a = new AbscenceTable();
-                a.idReposition = Convert.ToInt32(dt.Rows[i]["idReposición"]);
-                a.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
-                a.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
-                a.date = Convert.ToDateTime(dt.Rows[i]["FechaReposicion"]);
-                a.startTime = Convert.ToString(dt.Rows[i]["Hora_Inicio"]);
-                a.classroom = Convert.ToString(dt.Rows[i]["Salón"]);
-                a.eventNum = Convert.ToInt32(dt.Rows[i]["Número_Evento"]);
-                a.idSchedule = Convert.ToInt32(dt.Rows[i]["idHorario"]);
-                a.idCode = Convert.ToInt32(dt.Rows[i]["idCódigo"]);
+                // Add info of an reposition to repositions list
+                RepositionTable r = new RepositionTable();
+                r.idReposition = Convert.ToInt32(dt.Rows[i]["idReposición"]);
+                r.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
+                r.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
+                r.date = Convert.ToDateTime(dt.Rows[i]["FechaReposicion"]);
+                r.startTime = Convert.ToString(dt.Rows[i]["Hora_Inicio"]);
+                r.classroom = Convert.ToString(dt.Rows[i]["Salón"]);
+                r.eventNum = Convert.ToInt32(dt.Rows[i]["Número_Evento"]);
+                r.idSchedule = Convert.ToInt32(dt.Rows[i]["idHorario"]);
+                r.idCode = Convert.ToInt32(dt.Rows[i]["idCódigo"]);
 
-                abscences.Add(a);
+                repositions.Add(r);
             }
 
-            return JsonConvert.SerializeObject(abscences);
+            return JsonConvert.SerializeObject(repositions);
         }
-        // The are no abscence reports submitted by the professor
+        // The are no reposition reports submitted by the professor
         else
             return "";
     }
@@ -137,15 +137,15 @@ public class AbscenceController : ControllerBase
     // --- API ROUTE: CREATE NEW REPOSITION REPORT ---
     [HttpPost]
     [Route("CreateRepositionReport")]
-    public IActionResult CreateReposition(AbscenceModel abscence)
+    public IActionResult CreateReposition(RepositionModel reposition)
     {
         if (ModelState.IsValid)
         {
             // Register reposition report in database
             SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-            string sqlFormattedDate = abscence.date.HasValue ? abscence.date.Value.ToString("yyyyMMdd") : "";
+            string sqlFormattedDate = reposition.date.HasValue ? reposition.date.Value.ToString("yyyyMMdd") : "";
             SqlCommand cmd = new SqlCommand(@"INSERT INTO Reposiciones (FechaReposicion, Hora_Inicio, idHorario, idCódigo) 
-            VALUES ('" + sqlFormattedDate + "', '" + abscence.startTime + "', " + abscence.idSchedule + ", " + abscence.idCode + ")", con);
+            VALUES ('" + sqlFormattedDate + "', '" + reposition.startTime + "', " + reposition.idSchedule + ", " + reposition.idCode + ")", con);
             con.Open();
             cmd.ExecuteNonQuery();
             con.Close();
@@ -160,23 +160,23 @@ public class AbscenceController : ControllerBase
     // --- API ROUTE: CREATE NEW EXTERNAL UNIT REPORT ---
     [HttpPost]
     [Route("CreateExternalUnitReport")]
-    public IActionResult CreateExternalUnit(ExternalUnitModel abscence)
+    public IActionResult CreateExternalUnit(ExternalUnitModel externalUnit)
     {
         if (ModelState.IsValid)
         {
-            string sqlFormattedDate = abscence.date.HasValue ? abscence.date.Value.ToString("yyyyMMdd") : "";
+            string sqlFormattedDate = externalUnit.date.HasValue ? externalUnit.date.Value.ToString("yyyyMMdd") : "";
 
-            // Register reposition report in database
+            // Register external unit report in database
             SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
             SqlCommand cmd = new SqlCommand(@"INSERT INTO Reposiciones (FechaReposicion, Hora_Inicio, idHorario, idCódigo, Salón, Número_Evento) 
-            VALUES ('" + sqlFormattedDate + "', '" + abscence.startTime + "', " + abscence.idSchedule + ", 6, '" + abscence.classroom + "', -1)", con);
+            VALUES ('" + sqlFormattedDate + "', '" + externalUnit.startTime + "', " + externalUnit.idSchedule + ", 6, '" + externalUnit.classroom + "', -1)", con);
             con.Open();
             cmd.ExecuteNonQuery();
             con.Close();
 
             // Register attendance in database
             con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-            cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + abscence.idSchedule + ", '" + sqlFormattedDate + "', 6)", con);
+            cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + externalUnit.idSchedule + ", '" + sqlFormattedDate + "', 6)", con);
             con.Open();
             cmd.ExecuteNonQuery();
             con.Close();
@@ -194,7 +194,7 @@ public class AbscenceController : ControllerBase
     [Route("Professor/GetClasses/{nomina}")]
     public string GetClasses(int nomina)
     {
-        // Get all abscence reports from the professor
+        // Get all classes that the professor teaches
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
         SELECT idHorario, CONCAT(CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo), ' - ', Materia) AS 'Clase'
@@ -231,19 +231,19 @@ public class AbscenceController : ControllerBase
     }
 
 
-    // --- API ROUTE: GET ALL PENDING ABSENCE REPORTS ---
+    // --- API ROUTE: GET ALL PENDING REPOSITION REPORTS ---
     [HttpGet]
-    [Route("Admin/GetPendingAbscence")]
-    public string GetPendingAbscence()
+    [Route("Admin/GetPendingReposition")]
+    public string GetPendingReposition()
     {
         return GetRepositionReports(true);
     }
 
 
-    // --- API ROUTE: GET ALL ACCEPTED ABSENCE REPORTS ---
+    // --- API ROUTE: GET ALL ACCEPTED REPOSITION REPORTS ---
     [HttpGet]
-    [Route("Admin/GetAcceptedAbscence")]
-    public string GetAcceptedAbscence()
+    [Route("Admin/GetAcceptedReposition")]
+    public string GetAcceptedReposition()
     {
         return GetRepositionReports(false);
     }
@@ -252,13 +252,13 @@ public class AbscenceController : ControllerBase
     // --- API ROUTE: ASSIGN CLASSROOM AND EVENT NUMBER TO A REPOSITION ---
     [HttpPut]
     [Route("AssignClassroomEvent")]
-    public IActionResult AssignClassroomEvent(AbscenceClassroom abscence)
+    public IActionResult AssignClassroomEvent(RepositionClassroom reposition)
     {
         if (ModelState.IsValid)
         {
             // Register classroom in database
             SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-            SqlCommand cmd = new SqlCommand("UPDATE Reposiciones SET Salón='" + abscence.classroom + "', Número_Evento='" + abscence.numEvent + "' WHERE idReposición=" + abscence.idReposition, con);
+            SqlCommand cmd = new SqlCommand("UPDATE Reposiciones SET Salón='" + reposition.classroom + "', Número_Evento='" + reposition.numEvent + "' WHERE idReposición=" + reposition.idReposition, con);
             con.Open();
             cmd.ExecuteNonQuery();
             con.Close();
@@ -273,13 +273,13 @@ public class AbscenceController : ControllerBase
     // --- API ROUTE: REGISTER ATTENDANCE FOR A REPOSITION ---
     [HttpPost]
     [Route("RegisterRepositionAttendance")]
-    public IActionResult RegisterRepositionAttendance(AbscenceAttendance abscence)
+    public IActionResult RegisterRepositionAttendance(RepositionAttendance reposition)
     {
         if (ModelState.IsValid)
         {
             // Obtain reposition data from database
             SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-            SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Reposiciones WHERE idReposición=" + abscence.idReposition, con);
+            SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Reposiciones WHERE idReposición=" + reposition.idReposition, con);
             DataTable dt = new DataTable();
             da.Fill(dt);
             int idSchedule = Convert.ToInt32(dt.Rows[0]["idHorario"]);
@@ -306,7 +306,7 @@ public class AbscenceController : ControllerBase
                     {
                         // Register attendance in database
                         con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                        SqlCommand cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + idSchedule + ", '" + repositionDate.ToString("yyyyMMdd") + "', " + abscence.code + ")", con);
+                        SqlCommand cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + idSchedule + ", '" + repositionDate.ToString("yyyyMMdd") + "', " + reposition.code + ")", con);
                         con.Open();
                         cmd.ExecuteNonQuery();
                         con.Close();
@@ -320,6 +320,7 @@ public class AbscenceController : ControllerBase
                 else
                     return Ok(new { message = "La fecha actual no coincide con la de la reposición." });
             }
+            // Attendance is already registered
             else
                 return Ok(new { message = "Ya se registró la asistencia para esta reposición." });
         }
