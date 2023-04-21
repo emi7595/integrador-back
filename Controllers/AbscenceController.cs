@@ -24,8 +24,15 @@ public class AbscenceController : ControllerBase
         // Get all abscence reports from the professor
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
-        SELECT  idReposición, Materia, CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', 
-                FechaReposicion, Reposiciones.Hora_Inicio, Reposiciones.Salón, Número_Evento, Reposiciones.idHorario, Reposiciones.idCódigo  
+        SELECT  idReposición, 
+                Materia, 
+                CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', 
+                FechaReposicion, 
+                Reposiciones.Hora_Inicio, 
+                Reposiciones.Salón, 
+                Número_Evento, 
+                Reposiciones.idHorario, 
+                Reposiciones.idCódigo  
         FROM Reposiciones
             JOIN Horarios ON Reposiciones.idHorario=Horarios.idHorario
             JOIN Cursos ON (
@@ -307,21 +314,14 @@ public class AbscenceController : ControllerBase
                     }
                     // Reposition is not on time
                     else
-                    {
                         return Ok(new { message = "La hora actual no coincide con la de la reposición. O bien, ha intentado registrar su asistencia muy tarde." });
-                    }
-
                 }
                 // Reposition is in another date
                 else
-                {
                     return Ok(new { message = "La fecha actual no coincide con la de la reposición." });
-                }
             }
             else
-            {
                 return Ok(new { message = "Ya se registró la asistencia para esta reposición." });
-            }
         }
         else
             return BadRequest(ModelState);
