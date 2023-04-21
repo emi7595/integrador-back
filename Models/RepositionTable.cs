@@ -1,6 +1,6 @@
 namespace integrador_back.Models;
 
-public class AbscenceTable
+public class RepositionTable
 {
     public int? idReposition { get; set; }
     public string? subjectName { get; set; }
