@@ -8,6 +8,7 @@ public class AbscenceTable
     public DateTime? date { get; set; }
     public string? startTime { get; set; }
     public string? classroom { get; set; }
+    public int? eventNum { get; set; }
     public int? idSchedule { get; set; }
     public int? idCode { get; set; }
 }

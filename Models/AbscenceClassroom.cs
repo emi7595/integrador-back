@@ -4,4 +4,5 @@ public class AbscenceClassroom
 {
     public int? idReposition { get; set; }
     public string? classroom { get; set; }
+    public int? numEvent { get; set; }
 }
