@@ -265,8 +265,8 @@ public class QRController : ControllerBase
             c.CRN = dt.Rows[0]["CRN"].ToString();
             c.subject_CVE = (string)dt.Rows[0]["CVE_Materia"];
             c.subjectName = (string)dt.Rows[0]["Materia"];
-            c.startHour = (TimeSpan)dt.Rows[0]["Hora_Inicio"];
-            c.endHour = (TimeSpan)dt.Rows[0]["Hora_Final"];
+            c.startHour = (string)dt.Rows[0]["Hora_Inicio"];
+            c.endHour = (string)dt.Rows[0]["Hora_Final"];
             return JsonConvert.SerializeObject(c);
         }
         // The professor doesn't have class at the present time

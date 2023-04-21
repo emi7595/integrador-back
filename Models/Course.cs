@@ -6,6 +6,6 @@ public class Course
     public string? CRN { get; set; }
     public string? subject_CVE { get; set; }
     public string? subjectName { get; set; }
-    public TimeSpan? startHour { get; set; }
-    public TimeSpan? endHour { get; set; }
+    public string? startHour { get; set; }
+    public string? endHour { get; set; }
 }
