@@ -119,7 +119,7 @@ public class RepositionsController : ControllerBase
                 r.date = Convert.ToDateTime(dt.Rows[i]["FechaReposicion"]);
                 r.startTime = Convert.ToString(dt.Rows[i]["Hora_Inicio"]);
                 r.classroom = Convert.ToString(dt.Rows[i]["Salón"]);
-                r.eventNum = Convert.ToInt32(dt.Rows[i]["Número_Evento"]);
+                r.eventNum = dt.Rows[i]["Número_Evento"] != DBNull.Value ? Convert.ToInt32(dt.Rows[i]["Número_Evento"]) : null;
                 r.idSchedule = Convert.ToInt32(dt.Rows[i]["idHorario"]);
                 r.idCode = Convert.ToInt32(dt.Rows[i]["idCódigo"]);
 
