@@ -2,6 +2,8 @@ namespace integrador_back.Models;
 
 public class RepositionTable
 {
+    public string? employeeName { get; set; }
+    public int? nomina { get; set; }
     public int? idReposition { get; set; }
     public string? subjectName { get; set; }
     public string? subject_CVE { get; set; }

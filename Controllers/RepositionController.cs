@@ -24,7 +24,9 @@ public class RepositionsController : ControllerBase
         // Get all reposition reports (pending/accepted)
         SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
         SqlDataAdapter da = new SqlDataAdapter(@"
-        SELECT  idReposición, 
+        SELECT  Nombre_Empleado,
+                Nómina,
+                idReposición, 
                 Materia, 
                 CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', 
                 FechaReposicion, 
@@ -41,6 +43,7 @@ public class RepositionsController : ControllerBase
                 AND Cursos.CVE_Materia=Horarios.CVE_Materia
                 AND Cursos.Grupo=Horarios.Grupo
                 AND Cursos.Salón=Horarios.Salón)
+            JOIN Empleados ON Cursos.Nómina_Empleado = Empleados.Nómina
             JOIN Materias ON (Cursos.CVE_Materia=CVE AND Cursos.Subject=Materias.Subject)
         WHERE Reposiciones.Salón IS " + (pending ? "NULL" : "NOT NULL"), con);
         DataTable dt = new DataTable();
@@ -54,6 +57,8 @@ public class RepositionsController : ControllerBase
             {
                 // Add info of a reposition to repositions list
                 RepositionTable r = new RepositionTable();
+                r.employeeName = Convert.ToString(dt.Rows[i]["Nombre_Empleado"]);
+                r.nomina = Convert.ToInt32(dt.Rows[i]["Nómina"]);
                 r.idReposition = Convert.ToInt32(dt.Rows[i]["idReposición"]);
                 r.subjectName = Convert.ToString(dt.Rows[i]["Materia"]);
                 r.subject_CVE = Convert.ToString(dt.Rows[i]["CVE_Materia"]);
