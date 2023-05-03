@@ -45,7 +45,7 @@ public class RepositionsController : ControllerBase
                 AND Cursos.Salón=Horarios.Salón)
             JOIN Empleados ON Cursos.Nómina_Empleado = Empleados.Nómina
             JOIN Materias ON (Cursos.CVE_Materia=CVE AND Cursos.Subject=Materias.Subject)
-        WHERE Reposiciones.Salón IS " + (pending ? "NULL" : "NOT NULL"), con);
+        WHERE Reposiciones.Salón IS " + (pending ? "NULL" : "NOT NULL") + " ORDER BY FechaReposicion DESC", con);
         DataTable dt = new DataTable();
         da.Fill(dt);
 
@@ -106,7 +106,7 @@ public class RepositionsController : ControllerBase
                 AND Cursos.Grupo=Horarios.Grupo
                 AND Cursos.Salón=Horarios.Salón)
             JOIN Materias ON (Cursos.CVE_Materia=CVE AND Cursos.Subject=Materias.Subject)
-        WHERE Nómina_Empleado=" + nomina, con);
+        WHERE Nómina_Empleado=" + nomina + " ORDER BY FechaReposicion DESC", con);
         DataTable dt = new DataTable();
         da.Fill(dt);
 
