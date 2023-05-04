@@ -311,7 +311,7 @@ public class RepositionsController : ControllerBase
                     {
                         // Register attendance in database
                         con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                        SqlCommand cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + idSchedule + ", '" + repositionDate.ToString("yyyyMMdd") + "', " + reposition.code + ")", con);
+                        SqlCommand cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + idSchedule + ", '" + repositionDate.ToString("yyyyMMdd") + "', " + reposition.idCode + ")", con);
                         con.Open();
                         cmd.ExecuteNonQuery();
                         con.Close();
