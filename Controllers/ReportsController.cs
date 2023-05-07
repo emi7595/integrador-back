@@ -69,6 +69,7 @@ public class ReportsController : ControllerBase
                     if (dt.Rows.Count > 0)
                     {
                         ScheduleDetail sD = new ScheduleDetail();
+                        sD.idSchedule = idHorario;
                         sD.codeId = Convert.ToInt16(dt.Rows[0]["idCódigo"]);
                         sD.codeDescription = Convert.ToString(dt.Rows[0]["Descripción"]);
                         sD.date = semesterBegin.Date;
@@ -78,6 +79,7 @@ public class ReportsController : ControllerBase
                     else
                     {
                         ScheduleDetail sD = new ScheduleDetail();
+                        sD.idSchedule = idHorario;
                         sD.codeId = 4;
                         sD.codeDescription = "Falta";
                         sD.date = semesterBegin.Date;
