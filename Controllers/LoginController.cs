@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using System.Data.SqlClient;
 using System.Data;
-using Newtonsoft.Json;
 using integrador_back.Models;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace integrador_back.Controllers;
 
@@ -28,7 +28,13 @@ public class LoginController : ControllerBase
         {
             SqlCommand command = new SqlCommand(query, connection);
             command.Parameters.AddWithValue("@Username", username);
-            command.Parameters.AddWithValue("@Password", password);
+
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] hashedBytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
+                string hashedPassword = BitConverter.ToString(hashedBytes).Replace("-", string.Empty);
+                command.Parameters.AddWithValue("@Password", hashedPassword);
+            }
 
             connection.Open();
             int count = (int)command.ExecuteScalar();
@@ -49,12 +55,18 @@ public class LoginController : ControllerBase
             {
                 // Generate and return authentication token if login successful
                 string token = "HOLA";
-                // Search for user info to store in sessionStorage
-                SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Empleados JOIN Usuarios ON Nómina=Nómina_Empleado WHERE Usuario ='" + login?.user + "' AND Pin = '" + login?.pin + "'", con);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-                return Ok(new { token, nomina = dt.Rows[0]["Nómina"], nombre = dt.Rows[0]["Nombre_Empleado"], idRol = dt.Rows[0]["idRol"], idDepartamento = dt.Rows[0]["idDepartamento"], idEscuela = dt.Rows[0]["idEscuela"] });
+                using (SHA256 sha256Hash = SHA256.Create())
+                {
+                    // Hash password
+                    byte[] hashedBytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(login?.pin ?? ""));
+                    string hashedPassword = BitConverter.ToString(hashedBytes).Replace("-", string.Empty);
+                    // Search for user info to store in sessionStorage
+                    SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
+                    SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Empleados JOIN Usuarios ON Nómina=Nómina_Empleado WHERE Usuario ='" + login?.user + "' AND Pin = '" + hashedPassword + "'", con);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    return Ok(new { token, nomina = dt.Rows[0]["Nómina"], nombre = dt.Rows[0]["Nombre_Empleado"], idRol = dt.Rows[0]["idRol"], idDepartamento = dt.Rows[0]["idDepartamento"], idEscuela = dt.Rows[0]["idEscuela"] });
+                }
             }
             else
             {
