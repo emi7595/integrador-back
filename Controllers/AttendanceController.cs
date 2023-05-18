@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Data.SqlClient;
 using System.Data;
-using Newtonsoft.Json;
 using integrador_back.Models;
 
 namespace integrador_back.Controllers;
@@ -24,37 +23,56 @@ public class AttendanceController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            Console.WriteLine(attendance.date);
             string sqlFormattedDate = attendance.date.HasValue ? attendance.date.Value.ToString("yyyyMMdd") : "";
             // Check if there is an attendance code for that day
-            SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-            SqlDataAdapter da = new SqlDataAdapter(@"
-            SELECT COUNT(*) AS Conteo FROM Asistencia WHERE Asistencia.idHorario=" + attendance.idSchedule + "AND Fecha='" + sqlFormattedDate + "'", con);
-            DataTable dt = new DataTable();
-            da.Fill(dt);
-
-            // If there was no attendance code, add one to database
-            if ((int)dt.Rows[0]["Conteo"] == 0)
+            string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlCommand cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + attendance.idSchedule + ", '" + sqlFormattedDate + "', " + attendance.codeId + ")", con);
-                con.Open();
-                cmd.ExecuteNonQuery();
-                con.Close();
-            }
-            // If there was an attendance code before, update it
-            else
-            {
-                con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlCommand cmd = new SqlCommand("UPDATE Asistencia SET idCódigo=" + attendance.codeId + " WHERE idHorario=" + attendance.idSchedule + "AND Fecha='" + sqlFormattedDate + "'", con);
-                con.Open();
-                cmd.ExecuteNonQuery();
-                con.Close();
-            }
+                connection.Open();
+                using (SqlCommand command = new SqlCommand("CheckAttendanceDay", connection))
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@idHorario", attendance.idSchedule);
+                    command.Parameters.AddWithValue("@fecha", sqlFormattedDate);
+
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                    {
+                        DataTable dt = new DataTable();
+                        adapter.Fill(dt);
+
+                        // If there was no attendance code, add one to database
+                        if ((int)dt.Rows[0]["Conteo"] == 0)
+                        {
+                            using (SqlCommand cmd = new SqlCommand("InsertAttendance", connection))
+                            {
+                                cmd.CommandType = CommandType.StoredProcedure;
+                                cmd.Parameters.AddWithValue("@idHorario", attendance.idSchedule);
+                                cmd.Parameters.AddWithValue("@fecha", sqlFormattedDate);
+                                cmd.Parameters.AddWithValue("@idCódigo", attendance.codeId);
+
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+                        // If there was an attendance code before, update it
+                        else
+                        {
+                            using (SqlCommand cmd = new SqlCommand("UpdateAttendance", connection))
+                            {
+                                cmd.CommandType = CommandType.StoredProcedure;
+                                cmd.Parameters.AddWithValue("@idHorario", attendance.idSchedule);
+                                cmd.Parameters.AddWithValue("@fecha", sqlFormattedDate);
+                                cmd.Parameters.AddWithValue("@idCódigo", attendance.codeId);
+
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
 
 
-            // Return confirmation message
-            return Ok(new { message = "Asistencia actualizada correctamente." });
+                        // Return confirmation message
+                        return Ok(new { message = "Asistencia actualizada correctamente." });
+                    }
+                }
+            }
         }
         else
             return BadRequest(ModelState);

@@ -35,30 +35,41 @@ public class QRController : ControllerBase
         else
         {
             // Get current code of class
-            SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-            SqlDataAdapter da = new SqlDataAdapter("SELECT idCódigo FROM Asistencia WHERE idHorario=" + currentClass + "AND Fecha='" + date.ToString("yyyyMMdd") + "'", con);
-            DataTable dt = new DataTable();
-            da.Fill(dt);
+            string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand("GetCurrentCode", connection))
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@idHorario", currentClass);
+                    command.Parameters.AddWithValue("@fecha", date.ToString("yyyyMMdd"));
 
-            int currentCode = -1;
-            // Current code (registered at the beginning of the class)
-            if (dt.Rows.Count > 0)
-            {
-                currentCode = (int)dt.Rows[0]["idCódigo"];
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                    {
+                        DataTable dt = new DataTable();
+                        adapter.Fill(dt);
+
+                        int currentCode = -1;
+                        // Current code (registered at the beginning of the class)
+                        if (dt.Rows.Count > 0)
+                            currentCode = (int)dt.Rows[0]["idCódigo"];
+                        // Class ended soon
+                        if (currentTime < classHour.Subtract(tenMinutes))
+                        {
+                            // Class was not late (beginning)
+                            if (currentCode == 0)
+                                return 2;
+                            // Class was also late (beginning)
+                            else
+                                return 3;
+                        }
+                        // Class ended on time
+                        else
+                            return currentCode;
+                    }
+                }
             }
-            // Class ended soon
-            if (currentTime < classHour.Subtract(tenMinutes))
-            {
-                // Class was not late (beginning)
-                if (currentCode == 0)
-                    return 2;
-                // Class was also late (beginning)
-                else
-                    return 3;
-            }
-            // Class ended on time
-            else
-                return currentCode;
         }
     }
 
@@ -66,87 +77,123 @@ public class QRController : ControllerBase
     // --- FUNCTION THAT RETURNS THE DESCRIPTION ASSOCIATED WITH AN ATTENDANCE CODE ---
     private string GetCodeMessage(int code)
     {
-        SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-        SqlDataAdapter da = new SqlDataAdapter("SELECT Descripción FROM Códigos WHERE idCódigo=" + code, con);
-        DataTable dt = new DataTable();
-        da.Fill(dt);
-        return (string)dt.Rows[0]["Descripción"];
+        string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+            using (SqlCommand command = new SqlCommand("GetCodeDescription", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@idCódigo", code);
+
+                using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                {
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
+
+                    return (string)dt.Rows[0]["Descripción"];
+                }
+            }
+        }
     }
 
 
     // --- FUNCTION THAT REGISTERS AN ATTENDANCE IN THE DATABASE AND RETURNS THE ATTENDANCE CODE ---
     private int SearchAttendance(int nomina, TimeSpan time, DateTime date, string day, bool start)
     {
-        // Get the class that the professor is currently on
-        SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-        SqlDataAdapter da = new SqlDataAdapter(@"
-        SELECT idHorario, Hora_Inicio, Hora_Final FROM Cursos JOIN Horarios ON (
-                Cursos.CRN=Horarios.CRN 
-                AND Cursos.Subject=Horarios.Subject 
-                AND Cursos.CVE_Materia=Horarios.CVE_Materia 
-                AND Cursos.Grupo=Horarios.Grupo 
-                AND Cursos.Salón=Horarios.Salón
-            ) 
-        WHERE Nómina_Empleado=" + nomina + @" AND " + day + @" IS NOT NULL 
-        AND ('" + time + "'>=DATEADD(minute, -10, Hora_Inicio) AND '" + time + "'<=Hora_Final)", con);
-        DataTable dt = new DataTable();
-        da.Fill(dt);
-
-        // The professor is currently on that class
-        if (dt.Rows.Count > 0)
+        string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
+        using (SqlConnection connection = new SqlConnection(connectionString))
         {
-            // Get data of current class
-            int currentClass = (int)dt.Rows[0]["idHorario"];
-            TimeSpan startHour = (TimeSpan)dt.Rows[0]["Hora_Inicio"];
-            TimeSpan endHour = (TimeSpan)dt.Rows[0]["Hora_Final"];
+            connection.Open();
+            using (SqlCommand command = new SqlCommand("GetCurrentClass", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@nomina", nomina);
+                command.Parameters.AddWithValue("@dayOfWeek", day);
+                command.Parameters.AddWithValue("@time", time);
 
-            // Check if there's an attendance field for this class and date
-            con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-            da = new SqlDataAdapter(@"
-            SELECT COUNT(*) AS Conteo FROM Asistencia JOIN Horarios ON Asistencia.idHorario=Horarios.idHorario
-            WHERE Asistencia.idHorario=" + currentClass + "AND Fecha='" + date.ToString("yyyyMMdd") + "'", con);
-            dt = new DataTable();
-            da.Fill(dt);
+                using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                {
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
 
-            // There is no attendance for that day
-            if ((int)dt.Rows[0]["Conteo"] == 0)
-            {
-                int code;
-                // Beginning of the class
-                if (start)
-                    code = GetAttendanceCode(currentClass, startHour, time, date, true);
-                // End of the class (return an error saying that entrance attendance must be registered first)
-                else
-                    return -2;
-                // Register attendance in database
-                con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlCommand cmd = new SqlCommand("INSERT INTO Asistencia VALUES (" + currentClass + ", '" + date.ToString("yyyyMMdd") + "', " + code + ")", con);
-                con.Open();
-                cmd.ExecuteNonQuery();
-                con.Close();
-                return code;
+                    // The professor is currently on that class
+                    if (dt.Rows.Count > 0)
+                    {
+                        // Get data of current class
+                        int currentClass = (int)dt.Rows[0]["idHorario"];
+                        TimeSpan startHour = (TimeSpan)dt.Rows[0]["Hora_Inicio"];
+                        TimeSpan endHour = (TimeSpan)dt.Rows[0]["Hora_Final"];
+
+                        // Check if there's an attendance field for this class and date
+                        using (SqlCommand cmd = new SqlCommand("CheckAttendanceDay", connection))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@idHorario", currentClass);
+                            cmd.Parameters.AddWithValue("@fecha", date.ToString("yyyyMMdd"));
+
+                            using (SqlDataAdapter adapter2 = new SqlDataAdapter(cmd))
+                            {
+                                DataTable dt2 = new DataTable();
+                                adapter2.Fill(dt2);
+
+                                // There is no attendance for that day
+                                if ((int)dt2.Rows[0]["Conteo"] == 0)
+                                {
+                                    int code;
+
+                                    // Beginning of the class
+                                    if (start)
+                                        code = GetAttendanceCode(currentClass, startHour, time, date, true);
+
+                                    // End of the class (return an error saying that entrance attendance must be registered first)
+                                    else
+                                        return -2;
+
+                                    // Register attendance in database
+                                    using (SqlCommand cmd2 = new SqlCommand("InsertAttendance", connection))
+                                    {
+                                        cmd2.CommandType = CommandType.StoredProcedure;
+                                        cmd2.Parameters.AddWithValue("@idHorario", currentClass);
+                                        cmd2.Parameters.AddWithValue("@fecha", date.ToString("yyyyMMdd"));
+                                        cmd2.Parameters.AddWithValue("@idCódigo", code);
+
+                                        cmd2.ExecuteNonQuery();
+                                        return code;
+                                    }
+                                }
+                                // End of the class - Update attendance code
+                                else if (!start)
+                                {
+                                    int code = GetAttendanceCode(currentClass, endHour, time, date, false);
+
+                                    using (SqlCommand cmd2 = new SqlCommand("UpdateAttendance", connection))
+                                    {
+                                        cmd2.CommandType = CommandType.StoredProcedure;
+                                        cmd2.Parameters.AddWithValue("@idHorario", currentClass);
+                                        cmd2.Parameters.AddWithValue("@fecha", date.ToString("yyyyMMdd"));
+                                        cmd2.Parameters.AddWithValue("@idCódigo", code);
+
+                                        cmd2.ExecuteNonQuery();
+                                        return code;
+                                    }
+                                }
+                                // The initial attendance has already been taken
+                                else
+                                {
+                                    return -1;
+                                }
+
+                            }
+                        }
+                    }
+                    // The professor isn't currently in a class
+                    else
+                    {
+                        return -3;
+                    }
+                }
             }
-            // End of the class - Update attendance code
-            else if (!start)
-            {
-                int code = GetAttendanceCode(currentClass, endHour, time, date, false);
-                con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                SqlCommand cmd = new SqlCommand("UPDATE Asistencia SET idCódigo=" + code + " WHERE idHorario=" + currentClass + "AND Fecha='" + date.ToString("yyyyMMdd") + "'", con);
-                con.Open();
-                cmd.ExecuteNonQuery();
-                con.Close();
-                return code;
-            }
-            // The initial attendance has already been taken
-            else
-            {
-                return -1;
-            }
-        }
-        // The professor isn't currently in a class
-        else
-        {
-            return -3;
         }
     }
 
@@ -239,40 +286,41 @@ public class QRController : ControllerBase
         }
 
         // Get the information of the class that the professor is currently on
-        SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-        SqlDataAdapter da = new SqlDataAdapter(@"
-        SELECT Cursos.CRN, CONCAT(TRIM(Cursos.Subject), '-', Cursos.CVE_Materia, '-', Cursos.Grupo) AS 'CVE_Materia', 
-                Materia, idHorario, CONVERT(char(5), Hora_Inicio, 108) AS 'Hora_Inicio', 
-                CONVERT(char(5), Hora_Final, 108) AS 'Hora_Final'
-        FROM Cursos JOIN Horarios ON (
-                Cursos.CRN=Horarios.CRN 
-                AND Cursos.Subject=Horarios.Subject 
-                AND Cursos.CVE_Materia=Horarios.CVE_Materia 
-                AND Cursos.Grupo=Horarios.Grupo 
-                AND Cursos.Salón=Horarios.Salón
-            ) 
-            JOIN Materias ON (Cursos.CVE_Materia=CVE AND Cursos.Subject=Materias.Subject)
-        WHERE Nómina_Empleado=" + nomina + @" AND " + day + @" IS NOT NULL 
-        AND ('" + time + "'>=DATEADD(minute, -10, Hora_Inicio) AND '" + time + "'<=Hora_Final)", con);
-        DataTable dt = new DataTable();
-        da.Fill(dt);
+        string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+            using (SqlCommand command = new SqlCommand("GetCurrentClassInformation", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@nomina", nomina);
+                command.Parameters.AddWithValue("@dayOfWeek", day);
+                command.Parameters.AddWithValue("@time", time);
 
-        // The professor is on class
-        if (dt.Rows.Count > 0)
-        {
-            Course c = new Course();
-            c.currentClass = (int)dt.Rows[0]["idHorario"];
-            c.CRN = dt.Rows[0]["CRN"].ToString();
-            c.subject_CVE = (string)dt.Rows[0]["CVE_Materia"];
-            c.subjectName = (string)dt.Rows[0]["Materia"];
-            c.startHour = (string)dt.Rows[0]["Hora_Inicio"];
-            c.endHour = (string)dt.Rows[0]["Hora_Final"];
-            return JsonConvert.SerializeObject(c);
-        }
-        // The professor doesn't have class at the present time
-        else
-        {
-            return "-1";
+                using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                {
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
+
+                    // The professor is on class
+                    if (dt.Rows.Count > 0)
+                    {
+                        Course c = new Course();
+                        c.currentClass = (int)dt.Rows[0]["idHorario"];
+                        c.CRN = dt.Rows[0]["CRN"].ToString();
+                        c.subject_CVE = (string)dt.Rows[0]["CVE_Materia"];
+                        c.subjectName = (string)dt.Rows[0]["Materia"];
+                        c.startHour = (string)dt.Rows[0]["Hora_Inicio"];
+                        c.endHour = (string)dt.Rows[0]["Hora_Final"];
+                        return JsonConvert.SerializeObject(c);
+                    }
+                    // The professor doesn't have class at the present time
+                    else
+                    {
+                        return "-1";
+                    }
+                }
+            }
         }
     }
 }

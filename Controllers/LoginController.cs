@@ -22,25 +22,26 @@ public class LoginController : ControllerBase
     private bool IsValidUser(string username, string password)
     {
         string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
-        string query = "SELECT COUNT(*) FROM Usuarios WHERE Usuario = @Username AND Pin = @Password";
-
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
-            SqlCommand command = new SqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Username", username);
-
-            using (SHA256 sha256Hash = SHA256.Create())
-            {
-                byte[] hashedBytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
-                string hashedPassword = BitConverter.ToString(hashedBytes).Replace("-", string.Empty);
-                command.Parameters.AddWithValue("@Password", hashedPassword);
-            }
-
             connection.Open();
-            int count = (int)command.ExecuteScalar();
-            connection.Close();
+            using (SqlCommand command = new SqlCommand("Login", connection))
+            {
+                using (SHA256 sha256Hash = SHA256.Create())
+                {
+                    byte[] hashedBytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(password));
+                    string hashedPassword = BitConverter.ToString(hashedBytes).Replace("-", string.Empty);
 
-            return count > 0;
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@usuario", username);
+                    command.Parameters.AddWithValue("@pin", hashedPassword);
+
+                    int count = (int)command.ExecuteScalar();
+
+                    return count > 0;
+                }
+
+            }
         }
     }
 
@@ -54,18 +55,40 @@ public class LoginController : ControllerBase
             if (IsValidUser(login?.user ?? "", login?.pin ?? ""))
             {
                 // Generate and return authentication token if login successful
-                string token = "HOLA";
+                string token = "UDEMApp2023";
                 using (SHA256 sha256Hash = SHA256.Create())
                 {
                     // Hash password
                     byte[] hashedBytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(login?.pin ?? ""));
                     string hashedPassword = BitConverter.ToString(hashedBytes).Replace("-", string.Empty);
-                    // Search for user info to store in sessionStorage
-                    SqlConnection con = new SqlConnection(_configuration?.GetConnectionString("UDEMAppCon")?.ToString());
-                    SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Empleados JOIN Usuarios ON Nómina=Nómina_Empleado WHERE Usuario ='" + login?.user + "' AND Pin = '" + hashedPassword + "'", con);
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-                    return Ok(new { token, nomina = dt.Rows[0]["Nómina"], nombre = dt.Rows[0]["Nombre_Empleado"], idRol = dt.Rows[0]["idRol"], idDepartamento = dt.Rows[0]["idDepartamento"], idEscuela = dt.Rows[0]["idEscuela"] });
+
+                    string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
+                    using (SqlConnection connection = new SqlConnection(connectionString))
+                    {
+                        connection.Open();
+                        using (SqlCommand command = new SqlCommand("GetEmployeeInformation", connection))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddWithValue("@usuario", login?.user);
+                            command.Parameters.AddWithValue("@pin", hashedPassword);
+
+                            using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                            {
+                                DataTable dt = new DataTable();
+                                adapter.Fill(dt);
+
+                                return Ok(new
+                                {
+                                    token,
+                                    nomina = dt.Rows[0]["Nómina"],
+                                    nombre = dt.Rows[0]["Nombre_Empleado"],
+                                    idRol = dt.Rows[0]["idRol"],
+                                    idDepartamento = dt.Rows[0]["idDepartamento"],
+                                    idEscuela = dt.Rows[0]["idEscuela"]
+                                });
+                            }
+                        }
+                    }
                 }
             }
             else
