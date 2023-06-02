@@ -1,14 +1,15 @@
 namespace integrador_back.Models;
 
-public class UDEMAvg
+public class VicerrectoriaAvg
 {
-    public int? vicerrectoriaId { get; set; }
     public string? vicerrectoriaName { get; set; }
+    public int? schoolId { get; set; }
+    public string? schoolName { get; set; }
     public double? average { get; set; }
     public int[]? codes { get; set; }
 
     // Constructor
-    public UDEMAvg()
+    public VicerrectoriaAvg()
     {
         codes = new int[11];
     }

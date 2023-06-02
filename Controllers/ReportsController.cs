@@ -317,7 +317,7 @@ public class ReportsController : ControllerBase
 
     // --- API ROUTE: GET ATTENDANCE AVERAGE OF A CERTAIN SCHOOL ---
     [HttpGet]
-    [Route("Vicerrector/GetSchoolAverage/{idEscuela}")]
+    [Route("Decano/GetSchoolAverage/{idEscuela}")]
     public string GetSchoolAverage(int idEscuela)
     {
         string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
@@ -391,19 +391,19 @@ public class ReportsController : ControllerBase
     }
 
 
-    // --- API ROUTE: GET ATTENDANCE AVERAGE OF THE WHOLE UNIVERSITY ---
     [HttpGet]
-    [Route("Rector/GetUDEMAverage")]
-    public string GetUDEMAverage()
+    [Route("Vicerrector/GetVicerrectoriaAverage/{idVicerrectoria}")]
+    public string GetVicerrectoriaAverage(int idVicerrectoria)
     {
         // Get all schools
         string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             connection.Open();
-            using (SqlCommand command = new SqlCommand("GetSchools", connection))
+            using (SqlCommand command = new SqlCommand("GetSchoolsVicerrectoria", connection))
             {
                 command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@idVicerrectoria", idVicerrectoria);
 
                 using (SqlDataAdapter adapter = new SqlDataAdapter(command))
                 {
@@ -413,14 +413,14 @@ public class ReportsController : ControllerBase
                     // Check attendance average for each school
                     if (dt.Rows.Count > 0)
                     {
-                        List<UDEMAvg> UDEMAvg = new List<UDEMAvg>();
+                        List<VicerrectoriaAvg> VicerrectoriaAvg = new List<VicerrectoriaAvg>();
                         for (int i = 0; i < dt.Rows.Count; i++)
                         {
                             // Get attendance average of all departments in school 
                             List<SchoolAvg>? schoolAvg = JsonConvert.DeserializeObject<List<SchoolAvg>>(GetSchoolAverage(Convert.ToInt16(dt.Rows[i]["idEscuela"])));
                             if (schoolAvg != null)
                             {
-                                UDEMAvg u = new UDEMAvg();
+                                VicerrectoriaAvg u = new VicerrectoriaAvg();
                                 u.schoolId = Convert.ToInt16(dt.Rows[i]["idEscuela"]);
                                 u.schoolName = Convert.ToString(dt.Rows[i]["Nombre_Escuela"]);
                                 double avgAux = 0;
@@ -438,8 +438,73 @@ public class ReportsController : ControllerBase
                                 }
                                 u.average = available > 0 ? avgAux / available : -1;
                                 u.codes = codes;
-                                UDEMAvg.Add(u);
+                                VicerrectoriaAvg.Add(u);
                             }
+                        }
+
+                        return JsonConvert.SerializeObject(VicerrectoriaAvg);
+                    }
+                    // There are no schools available
+                    else
+                    {
+                        return "No hay escuelas";
+                    }
+                }
+            }
+        }
+    }
+
+
+    // --- API ROUTE: GET ATTENDANCE AVERAGE OF THE WHOLE UNIVERSITY ---
+    [HttpGet]
+    [Route("Rector/GetUDEMAverage")]
+    public string GetUDEMAverage()
+    {
+        // Get all Vicerrectorias
+        string? connectionString = _configuration?.GetConnectionString("UDEMAppCon")?.ToString();
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+            using (SqlCommand command = new SqlCommand("GetVicerrectorias", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                {
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
+
+                    // Check attendance average for each vicerrectoria
+                    if (dt.Rows.Count > 0)
+                    {
+                        List<UDEMAvg> UDEMAvg = new List<UDEMAvg>();
+                        for (int i = 0; i < dt.Rows.Count; i++)
+                        {
+                            // Get attendance average of all schools in vicerrectoria
+                            List<VicerrectoriaAvg>? vicerrectoriaAvg = JsonConvert.DeserializeObject<List<VicerrectoriaAvg>>(GetVicerrectoriaAverage(Convert.ToInt16(dt.Rows[i]["idVicerrectoria"])));
+                            if (vicerrectoriaAvg != null)
+                                
+                                {
+                                    UDEMAvg u = new UDEMAvg();
+                                    u.vicerrectoriaId = Convert.ToInt16(dt.Rows[i]["idVicerrectoria"]);
+                                    u.vicerrectoriaName = Convert.ToString(dt.Rows[i]["Nombre_Vicerrectoria"]);
+                                    double avgAux = 0;
+                                    int[] codes = new int[11];
+                                    int available = 0;
+                                    foreach (var item in vicerrectoriaAvg)
+                                    {
+                                        if (item.average != -1)
+                                        {
+                                            available++;
+                                            avgAux += item.average == null ? 0 : (double)item.average;
+                                            for (int j = 0; j < 11; j++)
+                                                codes[j] += item?.codes?[j] ?? 0;
+                                        }
+                                    }
+                                    u.average = available > 0 ? avgAux / available : -1;
+                                    u.codes = codes;
+                                    UDEMAvg.Add(u);
+                                }
                         }
 
                         return JsonConvert.SerializeObject(UDEMAvg);
@@ -447,7 +512,7 @@ public class ReportsController : ControllerBase
                     // There are no schools available
                     else
                     {
-                        return "No hay escuelas";
+                        return "No hay Vicerrectorias";
                     }
                 }
             }

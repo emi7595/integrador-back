@@ -84,7 +84,8 @@ public class LoginController : ControllerBase
                                     nombre = dt.Rows[0]["Nombre_Empleado"],
                                     idRol = dt.Rows[0]["idRol"],
                                     idDepartamento = dt.Rows[0]["idDepartamento"],
-                                    idEscuela = dt.Rows[0]["idEscuela"]
+                                    idEscuela = dt.Rows[0]["idEscuela"],
+                                    idVicerrectoria = dt.Rows[0]["idVicerrectoria"]
                                 });
                             }
                         }
